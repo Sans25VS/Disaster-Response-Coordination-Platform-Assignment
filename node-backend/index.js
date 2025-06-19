@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
+import geminiRoutes from './routes/geminiRoutes.js';
+import geocodeRoutes from './routes/geocodeRoutes.js';
 
 dotenv.config();
 
@@ -102,9 +104,34 @@ app.post('/disasters/:id/verify-image', (req, res) => {
 });
 
 // --- Geocoding (mock Gemini + mapping service) ---
-app.post('/geocode', (req, res) => {
-  // TODO: Call Gemini for location extraction, then geocode
-  res.json({ lat: 40.7128, lng: -74.0060, location: 'Manhattan, NYC' });
+app.post('/geocode', async (req, res) => {
+  const { location_name } = req.body;
+  const cacheKey = `geocode:${location_name}`;
+  // Check cache
+  const { data: cacheData } = await supabase
+    .from('cache')
+    .select('value, expires_at')
+    .eq('key', cacheKey)
+    .single();
+
+  if (cacheData && new Date(cacheData.expires_at) > new Date()) {
+    return res.json(cacheData.value);
+  }
+
+  // Call Google Maps Geocoding API
+  const mapsApiKey = process.env.GOOGLE_MAPS_API_KEY;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(location_name)}&key=${mapsApiKey}`;
+  const geoRes = await fetch(url);
+  const geoData = await geoRes.json();
+
+  // Cache response
+  await supabase.from('cache').upsert({
+    key: cacheKey,
+    value: geoData,
+    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString()
+  });
+
+  res.json(geoData);
 });
 
 // --- Resources CRUD (for testing) ---
@@ -146,56 +173,8 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 export const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Gemini Location Extraction Endpoint
-app.post('/gemini/extract-location', async (req, res) => {
-  const { description } = req.body;
-  const cacheKey = `gemini:location:${description}`;
-  // Check cache
-  const { data: cacheData } = await supabase
-    .from('cache')
-    .select('value, expires_at')
-    .eq('key', cacheKey)
-    .single();
-
-  if (cacheData && new Date(cacheData.expires_at) > new Date()) {
-    return res.json(cacheData.value);
-  }
-
-  // Call Gemini API
-  const geminiApiKey = process.env.GEMINI_API_KEY;
-  const prompt = `Extract location from: ${description}`;
-  const geminiRes = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    }
-  );
-  const geminiData = await geminiRes.json();
-
-  // Cache response
-  await supabase.from('cache').upsert({
-    key: cacheKey,
-    value: geminiData,
-    expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString()
-  });
-
-  res.json(geminiData);
-});
-
-// Gemini List Models Endpoint
-app.get('/gemini/list-models', async (req, res) => {
-  const geminiApiKey = process.env.GEMINI_API_KEY;
-  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${geminiApiKey}`;
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    res.json(data);
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch models', details: err.message });
-  }
-});
+app.use('/gemini', geminiRoutes);
+app.use('/geocode', geocodeRoutes);
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
