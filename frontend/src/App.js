@@ -19,6 +19,11 @@ function App() {
   const [geminiDescription, setGeminiDescription] = useState('');
   const [geminiLocationResult, setGeminiLocationResult] = useState(null);
   const [geminiLoading, setGeminiLoading] = useState(false);
+  const [mockSocialMedia, setMockSocialMedia] = useState([]);
+  const [loadingMockSocial, setLoadingMockSocial] = useState(false);
+  const [twitterResults, setTwitterResults] = useState([]);
+  const [twitterQuery, setTwitterQuery] = useState('');
+  const [twitterLoading, setTwitterLoading] = useState(false);
 
   // Fetch disasters
   const fetchDisasters = async () => {
@@ -50,6 +55,37 @@ function App() {
     if (!error) setSupabaseDisasters(data);
   };
 
+  // Fetch mock social media
+  const fetchMockSocialMedia = async () => {
+    setLoadingMockSocial(true);
+    const res = await fetch('http://localhost:4000/mock-social-media');
+    const data = await res.json();
+    setMockSocialMedia(data);
+    setLoadingMockSocial(false);
+  };
+
+  // Helper to flag priority alerts
+  function isPriorityText(text) {
+    const t = text.toLowerCase();
+    return t.includes('urgent') || t.includes('sos');
+  }
+
+  // Fetch Twitter search results
+  const fetchTwitterResults = async (query) => {
+    setTwitterLoading(true);
+    setTwitterResults([]);
+    try {
+      const res = await fetch(`http://localhost:4000/twitter/search?q=${encodeURIComponent(query)}`);
+      const data = await res.json();
+      // Twitter API returns {data: [{text, ...}, ...]}
+      const posts = (data.data || []).map(post => ({ ...post, priority: isPriorityText(post.text) }));
+      setTwitterResults(posts);
+    } catch (err) {
+      setTwitterResults([]);
+    }
+    setTwitterLoading(false);
+  };
+
   // WebSocket for real-time updates (mocked for now)
   useEffect(() => {
     fetchDisasters();
@@ -57,6 +93,7 @@ function App() {
     fetchResources();
     fetchVerifications();
     fetchSupabaseDisasters();
+    fetchMockSocialMedia();
     // TODO: Add real WebSocket logic here
   }, []);
 
@@ -324,6 +361,41 @@ function App() {
             {JSON.stringify(geminiLocationResult, null, 2)}
           </pre>
         )}
+      </div>
+      <div style={{ marginTop: 40 }}>
+        <h2>Mock Social Media Reports (Priority Highlighted)</h2>
+        {loadingMockSocial && <div>Loading...</div>}
+        <ul>
+          {mockSocialMedia.map((post, idx) => (
+            <li key={idx} style={post.priority ? { border: '2px solid red', background: '#ffeaea', padding: 8, borderRadius: 4, marginBottom: 8 } : { marginBottom: 8 }}>
+              <b>{post.user}:</b> {post.post}
+              {post.priority && <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 8 }}>[PRIORITY]</span>}
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div style={{ marginTop: 40 }}>
+        <h2>Twitter Search (Priority Highlighted)</h2>
+        <form onSubmit={e => { e.preventDefault(); fetchTwitterResults(twitterQuery); }} style={{ marginBottom: 8 }}>
+          <input
+            type="text"
+            value={twitterQuery}
+            onChange={e => setTwitterQuery(e.target.value)}
+            placeholder="Search Twitter (e.g. #floodrelief)"
+            style={{ width: 300, marginRight: 8 }}
+            required
+          />
+          <button type="submit" disabled={twitterLoading}>Search</button>
+        </form>
+        {twitterLoading && <div>Loading...</div>}
+        <ul>
+          {twitterResults.map((post, idx) => (
+            <li key={idx} style={post.priority ? { border: '2px solid red', background: '#ffeaea', padding: 8, borderRadius: 4, marginBottom: 8 } : { marginBottom: 8 }}>
+              {post.text}
+              {post.priority && <span style={{ color: 'red', fontWeight: 'bold', marginLeft: 8 }}>[PRIORITY]</span>}
+            </li>
+          ))}
+        </ul>
       </div>
       <div style={{ marginTop: 40, color: '#888' }}>
         <b>Note:</b> Real-time updates for social media and resources are mocked. Add WebSocket logic for production.
