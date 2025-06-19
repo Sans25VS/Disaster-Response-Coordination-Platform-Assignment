@@ -7,6 +7,8 @@ import { createClient } from '@supabase/supabase-js';
 import fetch from 'node-fetch';
 import geminiRoutes from './routes/geminiRoutes.js';
 import geocodeRoutes from './routes/geocodeRoutes.js';
+import socialMediaRoutes from './routes/socialMediaRoutes.js';
+import twitterRoutes from './routes/twitterRoutes.js';
 
 dotenv.config();
 
@@ -175,6 +177,8 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.use('/gemini', geminiRoutes);
 app.use('/geocode', geocodeRoutes);
+app.use('/', socialMediaRoutes);
+app.use('/', twitterRoutes);
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
