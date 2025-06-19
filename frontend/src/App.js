@@ -1,7 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from './supabaseClient';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 
 const API_BASE = 'http://localhost:4000'; // Changed to Node.js backend
+
+// Custom marker icon for Leaflet
+const markerIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-icon.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png',
+  shadowSize: [41, 41]
+});
 
 function getAppStyles(darkMode) {
   return `
@@ -46,6 +59,11 @@ function App() {
   const [twitterQuery, setTwitterQuery] = useState('');
   const [twitterLoading, setTwitterLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const [selectedDisaster, setSelectedDisaster] = useState(null);
+  const [hospitals, setHospitals] = useState([]);
+  const [loadingHospitals, setLoadingHospitals] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const mapRef = useRef();
 
   // Fetch disasters
   const fetchDisasters = async () => {
@@ -106,6 +124,25 @@ function App() {
       setTwitterResults([]);
     }
     setTwitterLoading(false);
+  };
+
+  // Fetch hospitals near a disaster
+  const fetchHospitals = async (lat, lng) => {
+    setLoadingHospitals(true);
+    const res = await fetch(`http://localhost:4000/resources/hospitals?lat=${lat}&lng=${lng}`);
+    const data = await res.json();
+    setHospitals(data.results || []);
+    setLoadingHospitals(false);
+  };
+
+  // Get user location
+  const fetchUserLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        err => setUserLocation(null)
+      );
+    }
   };
 
   // WebSocket for real-time updates (mocked for now)
@@ -455,6 +492,95 @@ function App() {
               </li>
             ))}
           </ul>
+        </div>
+        {/* Interactive Map Section */}
+        <div style={{ marginTop: 40 }}>
+          <h2>Disasters (Click to Show Nearby Hospitals)</h2>
+          <ul style={{ paddingLeft: 0 }}>
+            {disasters.map(d => (
+              <li key={d.id} style={{ listStyle: 'none', marginBottom: 16, background: '#f9f9f9', borderRadius: 8, padding: 12, boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
+                <b>{d.title}</b> ({d.location})<br />
+                {d.description}<br />
+                Tags: {d.tags && d.tags.join(', ')}
+                <button style={{ marginLeft: 8 }} onClick={async () => {
+                  let lat = d.lat;
+                  let lng = d.lng;
+                  if (!lat || !lng) {
+                    // Geocode the location name using your backend
+                    const geoRes = await fetch('http://localhost:4000/geocode', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ location_name: d.location })
+                    });
+                    const geoData = await geoRes.json();
+                    if (geoData.results && geoData.results[0]) {
+                      lat = geoData.results[0].geometry.location.lat;
+                      lng = geoData.results[0].geometry.location.lng;
+                    } else {
+                      lat = 40.7128;
+                      lng = -74.0060;
+                    }
+                  }
+                  fetchHospitals(lat, lng);
+                  setSelectedDisaster({ ...d, lat, lng });
+                }}>Show Nearby Hospitals</button>
+              </li>
+            ))}
+          </ul>
+          {selectedDisaster && (
+            <div style={{ marginTop: 32 }}>
+              <h2>Nearby Hospitals (Map)</h2>
+              <button style={{ marginBottom: 12, marginRight: 8 }} onClick={fetchUserLocation}>Show My Location</button>
+              <button
+                style={{ marginBottom: 12 }}
+                onClick={() => {
+                  if (userLocation && mapRef.current) {
+                    mapRef.current.setView([userLocation.lat, userLocation.lng], 15);
+                  }
+                }}
+                disabled={!userLocation}
+              >
+                Recenter to My Location
+              </button>
+              {loadingHospitals && <div>Loading...</div>}
+              <MapContainer
+                center={[selectedDisaster.lat, selectedDisaster.lng]}
+                zoom={13}
+                style={{ height: '400px', width: '100%', borderRadius: 12 }}
+                whenCreated={mapInstance => { mapRef.current = mapInstance; }}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution="&copy; OpenStreetMap contributors"
+                />
+                <Marker position={[selectedDisaster.lat, selectedDisaster.lng]} icon={markerIcon}>
+                  <Popup>
+                    <b>{selectedDisaster.title}</b><br />
+                    Disaster Location
+                  </Popup>
+                </Marker>
+                {userLocation && (
+                  <Marker position={[userLocation.lat, userLocation.lng]} icon={markerIcon}>
+                    <Popup>
+                      <b>Your Location</b>
+                    </Popup>
+                  </Marker>
+                )}
+                {hospitals.map(h => (
+                  <Marker
+                    key={h.place_id}
+                    position={[h.geometry.location.lat, h.geometry.location.lng]}
+                    icon={markerIcon}
+                  >
+                    <Popup>
+                      <b>{h.name}</b><br />
+                      {h.vicinity}
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
+          )}
         </div>
         <div style={{ marginTop: 40, color: '#888', textAlign: 'center' }}>
           <b>Note:</b> Real-time updates for social media and resources are mocked. Add WebSocket logic for production.

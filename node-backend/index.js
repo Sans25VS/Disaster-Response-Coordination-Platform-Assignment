@@ -11,6 +11,7 @@ import socialMediaRoutes from './routes/socialMediaRoutes.js';
 import twitterRoutes from './routes/twitterRoutes.js';
 import browseRoutes from './routes/browseRoutes.js';
 import * as cheerio from 'cheerio';
+import placesRoutes from './routes/placesRoutes.js';
 
 dotenv.config();
 
@@ -182,6 +183,7 @@ app.use('/geocode', geocodeRoutes);
 app.use('/', socialMediaRoutes);
 app.use('/', twitterRoutes);
 app.use('/', browseRoutes);
+app.use('/', placesRoutes);
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
