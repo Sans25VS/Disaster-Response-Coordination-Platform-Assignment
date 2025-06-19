@@ -9,6 +9,8 @@ import geminiRoutes from './routes/geminiRoutes.js';
 import geocodeRoutes from './routes/geocodeRoutes.js';
 import socialMediaRoutes from './routes/socialMediaRoutes.js';
 import twitterRoutes from './routes/twitterRoutes.js';
+import browseRoutes from './routes/browseRoutes.js';
+import * as cheerio from 'cheerio';
 
 dotenv.config();
 
@@ -179,6 +181,7 @@ app.use('/gemini', geminiRoutes);
 app.use('/geocode', geocodeRoutes);
 app.use('/', socialMediaRoutes);
 app.use('/', twitterRoutes);
+app.use('/', browseRoutes);
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
