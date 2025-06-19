@@ -16,6 +16,9 @@ function App() {
   const [editForm, setEditForm] = useState({ title: '', location_name: '', description: '', tags: '' });
   const [editingApiDisaster, setEditingApiDisaster] = useState(null);
   const [editApiForm, setEditApiForm] = useState({ title: '', location: '', description: '', tags: '' });
+  const [geminiDescription, setGeminiDescription] = useState('');
+  const [geminiLocationResult, setGeminiLocationResult] = useState(null);
+  const [geminiLoading, setGeminiLoading] = useState(false);
 
   // Fetch disasters
   const fetchDisasters = async () => {
@@ -179,6 +182,24 @@ function App() {
     fetchDisasters();
   };
 
+  const handleGeminiExtractLocation = async (e) => {
+    e.preventDefault();
+    setGeminiLoading(true);
+    setGeminiLocationResult(null);
+    try {
+      const res = await fetch('http://localhost:4000/gemini/extract-location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: geminiDescription })
+      });
+      const data = await res.json();
+      setGeminiLocationResult(data);
+    } catch (err) {
+      setGeminiLocationResult({ error: 'Request failed' });
+    }
+    setGeminiLoading(false);
+  };
+
   return (
     <div style={{ fontFamily: 'sans-serif', margin: 20 }}>
       <h1>Disaster Response Platform</h1>
@@ -283,6 +304,26 @@ function App() {
             </li>
           ))}
         </ul>
+      </div>
+      <div style={{ marginTop: 40 }}>
+        <h2>Gemini Location Extraction (Sample)</h2>
+        <form onSubmit={handleGeminiExtractLocation} style={{ marginBottom: 8 }}>
+          <input
+            type="text"
+            value={geminiDescription}
+            onChange={e => setGeminiDescription(e.target.value)}
+            placeholder="Enter description (e.g. Flooding in Manhattan, NYC)"
+            style={{ width: 400, marginRight: 8 }}
+            required
+          />
+          <button type="submit" disabled={geminiLoading}>Extract Location</button>
+        </form>
+        {geminiLoading && <div>Loading...</div>}
+        {geminiLocationResult && (
+          <pre style={{ background: '#f4f4f4', padding: 8, borderRadius: 4 }}>
+            {JSON.stringify(geminiLocationResult, null, 2)}
+          </pre>
+        )}
       </div>
       <div style={{ marginTop: 40, color: '#888' }}>
         <b>Note:</b> Real-time updates for social media and resources are mocked. Add WebSocket logic for production.
