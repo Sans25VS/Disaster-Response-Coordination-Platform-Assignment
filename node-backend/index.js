@@ -132,10 +132,19 @@ app.post('/resources', (req, res) => {
   res.status(201).json(resource);
 });
 
+// Helper: keyword-based priority classifier
+function isPriorityReport(content) {
+  if (!content) return false;
+  const keywords = ['urgent', 'sos', 'emergency', 'help', 'immediate', 'critical', 'asap', 'rescue', 'danger'];
+  const text = content.toLowerCase();
+  return keywords.some(kw => text.includes(kw));
+}
+
 // --- Reports CRUD (for testing) ---
 app.post('/reports', (req, res) => {
   const { content, imageUrl } = req.body;
-  const report = { id: nextReportId++, content, imageUrl };
+  const priority = isPriorityReport(content);
+  const report = { id: nextReportId++, content, imageUrl, priority };
   reports.push(report);
   res.status(201).json(report);
 });
@@ -147,6 +156,26 @@ app.get('/reports', (req, res) => {
 // --- Verifications GET (for testing) ---
 app.get('/verifications', (req, res) => {
   res.json(verifications);
+});
+
+// --- Fetch real hospitals near a location using Google Places API ---
+app.get('/resources/hospitals', async (req, res) => {
+  const { lat, lng } = req.query;
+  if (!lat || !lng) {
+    return res.status(400).json({ error: 'Missing lat/lng' });
+  }
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Google Maps API key not set' });
+  }
+  const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=5000&type=hospital&key=${apiKey}`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 const supabaseUrl = process.env.SUPABASE_URL;
