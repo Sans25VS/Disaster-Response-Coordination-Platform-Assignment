@@ -1,0 +1,17 @@
+.map-section {
+    margin-bottom: 40px;
+}
+
+.map-container {
+    height: 500px;
+    width: 100%;
+    border-radius: 8px;
+    margin-top: 16px;
+}
+
+.map-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+} 

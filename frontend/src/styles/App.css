@@ -1,0 +1,125 @@
+body { 
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.dark-mode {
+    background-color: #181a1b;
+    color: #f1f1f1;
+}
+
+.light-mode {
+    background-color: #f8f9fa;
+    color: #222;
+}
+
+.main-container { 
+    max-width: 1200px; 
+    margin: 0 auto; 
+    padding: 32px; 
+    border-radius: 16px; 
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08); 
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.dark-mode .main-container {
+    background: #23272f;
+}
+
+.light-mode .main-container {
+    background: #fff;
+}
+
+h1, h2, label, .section-title { 
+    transition: color 0.2s; 
+}
+
+.dark-mode h1, .dark-mode h2, .dark-mode label, .dark-mode .section-title {
+    color: #f1f1f1;
+}
+
+.light-mode h1, .light-mode h2, .light-mode label, .light-mode .section-title {
+    color: #222;
+}
+
+form input, form textarea { 
+    border: 1px solid #ccc; 
+    border-radius: 6px; 
+    padding: 8px; 
+    font-size: 1rem; 
+    transition: border 0.2s, background 0.2s, color 0.2s; 
+}
+
+.dark-mode form input, .dark-mode form textarea {
+    background: #23272f; 
+    color: #f1f1f1;
+}
+
+.light-mode form input, .light-mode form textarea {
+    background: #fff; 
+    color: #222;
+}
+
+form input:focus, form textarea:focus { 
+    border: 1.5px solid #007bff; 
+    outline: none; 
+}
+
+button, .toggle-switch { 
+    background: #007bff; 
+    color: #fff; 
+    border: none; 
+    border-radius: 20px; 
+    padding: 8px 18px; 
+    font-size: 1rem; 
+    cursor: pointer; 
+    transition: background 0.2s, color 0.2s; 
+}
+
+button:hover, .toggle-switch:hover { 
+    background: #0056b3; 
+}
+
+.priority-anim { 
+    animation: pulse 1.2s infinite alternate; 
+}
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255,0,0,0.2); }
+  100% { box-shadow: 0 0 12px 4px rgba(255,0,0,0.18); }
+}
+
+.form-card { 
+    border: 1px solid #e0e0e0; 
+    border-radius: 12px; 
+    padding: 20px; 
+    margin-bottom: 24px; 
+    transition: background 0.3s; 
+    min-width: 320px; 
+}
+
+.dark-mode .form-card {
+    background: #111;
+    border-color: #444;
+}
+
+.light-mode .form-card {
+    background: #f6faff;
+}
+
+ul, li { 
+    transition: color 0.2s; 
+}
+
+.dark-mode ul, .dark-mode li {
+    color: #e0e0e0;
+}
+
+.light-mode ul, .light-mode li {
+    color: #222;
+} 

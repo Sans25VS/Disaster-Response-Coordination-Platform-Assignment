@@ -1,0 +1,40 @@
+.management-section {
+    margin-bottom: 40px;
+}
+
+.list-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.list-item {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    transition: box-shadow 0.2s;
+}
+
+.dark-mode .list-item {
+    border-color: #444;
+}
+
+.list-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.edit-form input, .edit-form textarea {
+    width: calc(100% - 20px);
+}
+
+.item-actions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+} 

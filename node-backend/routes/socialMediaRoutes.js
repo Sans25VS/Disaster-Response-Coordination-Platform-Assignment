@@ -17,7 +17,12 @@ router.get('/mock-social-media', (req, res) => {
     { post: 'SOS! Trapped in basement, need help', user: 'citizen4' },
     { post: 'urgent: medical supplies needed at shelter', user: 'citizen5' }
   ];
-  const flagged = posts.map(p => ({ ...p, priority: isPriority(p) }));
+  const flagged = posts.map((p, i) => ({
+    id: i + 1,
+    content: p.post,
+    author: p.user,
+    priority: isPriority(p)
+  }));
   res.json(flagged);
 });
 

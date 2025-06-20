@@ -11,7 +11,14 @@ export function getTwitterClient() {
 
 export async function searchTweets(query) {
   const client = getTwitterClient();
-  // This endpoint may require Elevated access
-  const { data } = await client.v2.search(query, { max_results: 10 });
-  return data;
+  // Twitter v2 returns { data: [ { text, ... } ] }
+  const result = await client.v2.search(query, { max_results: 20 });
+  // Always return an array of posts with a text property
+  if (result && Array.isArray(result.data)) {
+    return result.data;
+  } else if (result && result.data) {
+    return result.data;
+  } else {
+    return [];
+  }
 } 
