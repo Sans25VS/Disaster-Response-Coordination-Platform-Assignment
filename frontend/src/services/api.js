@@ -1,6 +1,6 @@
 import { supabase } from './supabaseClient';
 
-const API_BASE = 'http://localhost:4000';
+const API_BASE = 'https://disaster-response-coordination-plat-theta.vercel.app';
 
 // Helper to flag priority alerts
 function isPriorityText(text) {
@@ -116,7 +116,7 @@ export const deleteSupabaseResource = async (id) => {
 
 // Social Media
 export const fetchMockSocialMedia = async () => {
-  const res = await fetch('http://localhost:4000/mock-social-media');
+  const res = await fetch(`${API_BASE}/mock-social-media`);
   const data = await res.json();
   return data;
 };
@@ -124,7 +124,7 @@ export const fetchMockSocialMedia = async () => {
 export const fetchTwitterResults = async (query) => {
     if (!query) return [];
     try {
-      const res = await fetch(`http://localhost:4000/twitter/search?q=${encodeURIComponent(query)}`);
+      const res = await fetch(`${API_BASE}/twitter/search?q=${encodeURIComponent(query)}`);
       const data = await res.json();
       // Twitter API returns {data: [{text, ...}, ...]}
       return (data.data || []).map(post => ({ ...post, priority: isPriorityText(post.text) }));
@@ -137,14 +137,14 @@ export const fetchTwitterResults = async (query) => {
 
 // External Services
 export const fetchHospitals = async (lat, lng) => {
-  const res = await fetch(`http://localhost:4000/resources/hospitals?lat=${lat}&lng=${lng}`);
+  const res = await fetch(`${API_BASE}/resources/hospitals?lat=${lat}&lng=${lng}`);
   const data = await res.json();
   return data.results || [];
 };
 
 export const geocodeLocation = async (locationName) => {
     try {
-        const res = await fetch(`http://localhost:4000/geocode?address=${encodeURIComponent(locationName)}`);
+        const res = await fetch(`${API_BASE}/geocode?address=${encodeURIComponent(locationName)}`);
         if (!res.ok) {
             throw new Error(`Geocoding failed with status: ${res.status}`);
         }
