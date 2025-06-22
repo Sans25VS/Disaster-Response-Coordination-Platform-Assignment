@@ -156,11 +156,11 @@ SUPABASE_KEY
 
 Optional: MAPBOX_API_KEY or GOOGLE_MAPS_KEY
 
-📸 Screenshots
+### 📸 Screenshots
 Below are the project screenshots demonstrating various parts of the system:
 
 Screenshot	Description
-Created End points with dummy data (postman).png
+[text]( Frontend Created End points with dummy data (postman).png)
 Gemini API location extraction done
 Testing dummy data on localhost
 Screenshot 123
